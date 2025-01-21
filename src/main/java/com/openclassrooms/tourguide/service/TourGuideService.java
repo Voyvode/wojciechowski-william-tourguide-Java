@@ -7,7 +7,7 @@ import com.openclassrooms.tourguide.user.UserReward;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +18,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -95,15 +96,19 @@ public class TourGuideService {
 		return visitedLocation;
 	}
 
+	/**
+	 * Retrieves the 5 closest attractions to the specified location, sorted by distance.
+	 *
+	 * @param visitedLocation the user's location
+	 * @return a list of the 5 nearest attractions
+	 */
 	public List<Attraction> getNearByAttractions(VisitedLocation visitedLocation) {
-		List<Attraction> nearbyAttractions = new ArrayList<>();
-		for (Attraction attraction : gpsUtil.getAttractions()) {
-			if (rewardsService.isWithinAttractionProximity(attraction, visitedLocation.location)) {
-				nearbyAttractions.add(attraction);
-			}
-		}
-
-		return nearbyAttractions;
+		return gpsUtil.getAttractions().stream()
+				.map(attraction -> Pair.of(attraction, rewardsService.getDistance(attraction, visitedLocation.location)))
+				.sorted(Comparator.comparingDouble(Pair::getValue))
+				.limit(5)
+				.map(Pair::getKey)
+				.toList();
 	}
 
 	private void addShutDownHook() {
