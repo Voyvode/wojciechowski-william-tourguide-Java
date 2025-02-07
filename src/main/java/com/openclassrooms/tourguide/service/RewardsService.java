@@ -1,6 +1,7 @@
 package com.openclassrooms.tourguide.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -35,19 +36,27 @@ public class RewardsService {
 	public void setDefaultProximityBuffer() {
 		proximityBuffer = defaultProximityBuffer;
 	}
-	
-	public void calculateRewards(User user) {
-		List<VisitedLocation> userLocations = user.getVisitedLocations();
 
-		for(VisitedLocation visitedLocation : userLocations) {
-			for(Attraction attraction : attractions) {
-				if(user.getUserRewards().stream().filter(r -> r.attraction.attractionName.equals(attraction.attractionName)).count() == 0) {
-					if(nearAttraction(visitedLocation, attraction)) {
-						user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user)));
-					}
-				}
-			}
-		}
+	/**
+	 * Calculates and adds rewards for a user based on visited attractions.
+	 *
+	 * @param user the user to calculate rewards for, containing visited locations and current rewards.
+	 */
+	public void calculateRewards(User user) {
+		var visitedAttractions = user.getUserRewards().stream()
+				.map(reward -> reward.attraction)
+				.collect(Collectors.toSet());
+
+		var notVisitedAttractions = attractions.stream()
+				.filter(attraction -> !visitedAttractions.contains(attraction))
+				.toList();
+
+		notVisitedAttractions.parallelStream().forEach(attraction ->
+				user.getVisitedLocations().stream()
+						.filter(visitedLocation -> nearAttraction(visitedLocation, attraction))
+						.findFirst().ifPresent(visitedLocation -> user.addUserReward(
+								new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user))
+						)));
 	}
 	
 	public boolean isWithinAttractionProximity(Attraction attraction, Location location) {
