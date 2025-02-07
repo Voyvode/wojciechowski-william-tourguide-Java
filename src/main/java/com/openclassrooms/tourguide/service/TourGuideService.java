@@ -103,7 +103,7 @@ public class TourGuideService {
 	 * @return a list of the 5 nearest attractions
 	 */
 	public List<Attraction> getNearByAttractions(VisitedLocation visitedLocation) {
-		return gpsUtil.getAttractions().stream()
+		return rewardsService.getAttractions().stream()
 				.map(attraction -> Pair.of(attraction, rewardsService.getDistance(attraction, visitedLocation.location)))
 				.sorted(Comparator.comparingDouble(Pair::getValue))
 				.limit(5)
