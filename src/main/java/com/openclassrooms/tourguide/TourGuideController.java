@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import gpsUtil.location.Attraction;
+import com.openclassrooms.tourguide.response.NearbyAttractionResponse;
 import gpsUtil.location.VisitedLocation;
 
 import com.openclassrooms.tourguide.service.TourGuideService;
@@ -31,21 +31,29 @@ public class TourGuideController {
     public VisitedLocation getLocation(@RequestParam String userName) {
     	return tourGuideService.getUserLocation(getUser(userName));
     }
-    
-    //  TODO: Change this method to no longer return a List of Attractions.
- 	//  Instead: Get the closest five tourist attractions to the user - no matter how far away they are.
- 	//  Return a new JSON object that contains:
-    	// Name of Tourist attraction, 
-        // Tourist attractions lat/long, 
-        // The user's location lat/long, 
-        // The distance in miles between the user's location and each of the attractions.
-        // The reward points for visiting each Attraction.
-        //    Note: Attraction reward points can be gathered from RewardsCentral
-    @RequestMapping("/getNearbyAttractions") 
-    public List<Attraction> getNearbyAttractions(@RequestParam String userName) {
-    	VisitedLocation visitedLocation = tourGuideService.getUserLocation(getUser(userName));
-    	return tourGuideService.getNearByAttractions(visitedLocation);
-    }
+
+	/**
+	 * Get the closest five tourist attractions to the user.
+	 *
+	 * @param userName the user to look for nearby attractions
+	 * @return a JSON response containing attraction's name and location,
+	 *         user's location and possible reward points
+	 */
+	@RequestMapping("/getNearbyAttractions")
+	public List<NearbyAttractionResponse> getNearbyAttractions(String userName) {
+
+		var lastVisitedLocation = this.getUser(userName).getLastVisitedLocation();
+
+		// TODO: ugly, need refactor
+		return tourGuideService.getNearByAttractionsWithDistanceAndReward(lastVisitedLocation).stream().map(triple ->
+				new NearbyAttractionResponse(
+						triple.getLeft().attractionName,
+						triple.getLeft().latitude, triple.getLeft().longitude,
+						lastVisitedLocation.location.latitude, lastVisitedLocation.location.longitude,
+						triple.getMiddle(), // Distance
+						triple.getRight())) // Reward
+				.toList();
+	}
     
     @RequestMapping("/getRewards") 
     public List<UserReward> getRewards(@RequestParam String userName) {
@@ -60,6 +68,5 @@ public class TourGuideController {
     private User getUser(String userName) {
     	return tourGuideService.getUser(userName);
     }
-   
 
 }

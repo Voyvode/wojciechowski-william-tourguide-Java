@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -108,6 +109,24 @@ public class TourGuideService {
 				.sorted(Comparator.comparingDouble(Pair::getValue))
 				.limit(5)
 				.map(Pair::getKey)
+				.toList();
+	}
+
+	/**
+	 * Retrieves the 5 closest attractions to the specified location, sorted by distance.
+	 *
+	 * TODO: Need refactor for cleaner architecture.
+	 *
+	 * @param visitedLocation the user's location
+	 * @return a list of the 5 nearest attractions
+	 */
+	public List<Triple<Attraction, Double, Integer>> getNearByAttractionsWithDistanceAndReward(VisitedLocation visitedLocation) {
+		return rewardsService.getAttractions().stream()
+				.map(attraction -> Triple.of(attraction,
+								rewardsService.getDistance(attraction, visitedLocation.location),
+								rewardsService.getRewardPoints(attraction, visitedLocation.userId)))
+				.sorted(Comparator.comparingDouble(Triple::getMiddle))
+				.limit(5)
 				.toList();
 	}
 
