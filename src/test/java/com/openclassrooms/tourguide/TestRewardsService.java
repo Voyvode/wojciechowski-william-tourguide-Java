@@ -7,6 +7,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.boot.test.context.SpringBootTest;
+
 import org.junit.jupiter.api.Test;
 
 import gpsUtil.GpsUtil;
@@ -19,6 +21,7 @@ import com.openclassrooms.tourguide.service.TourGuideService;
 import com.openclassrooms.tourguide.user.User;
 import com.openclassrooms.tourguide.user.UserReward;
 
+@SpringBootTest
 public class TestRewardsService {
 
 	@Test
