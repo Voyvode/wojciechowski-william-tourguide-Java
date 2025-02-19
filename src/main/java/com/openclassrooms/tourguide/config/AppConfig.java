@@ -1,4 +1,4 @@
-package com.openclassrooms.tourguide;
+package com.openclassrooms.tourguide.config;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -13,7 +13,7 @@ import com.openclassrooms.tourguide.service.RewardsService;
 
 @Configuration
 @EnableAsync
-public class TourGuideModule {
+public class AppConfig {
 	
 	@Bean
 	public GpsUtil getGpsUtil() {

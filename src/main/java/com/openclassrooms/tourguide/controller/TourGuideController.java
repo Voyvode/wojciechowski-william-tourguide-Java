@@ -1,4 +1,4 @@
-package com.openclassrooms.tourguide;
+package com.openclassrooms.tourguide.controller;
 
 import java.util.List;
 
@@ -7,12 +7,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.openclassrooms.tourguide.response.NearbyAttractionResponse;
+import com.openclassrooms.tourguide.dto.NearbyAttractionDTO;
 import gpsUtil.location.VisitedLocation;
 
 import com.openclassrooms.tourguide.service.TourGuideService;
-import com.openclassrooms.tourguide.user.User;
-import com.openclassrooms.tourguide.user.UserReward;
+import com.openclassrooms.tourguide.model.User;
+import com.openclassrooms.tourguide.model.UserReward;
 
 import tripPricer.Provider;
 
@@ -40,13 +40,13 @@ public class TourGuideController {
 	 *         user's location and possible reward points
 	 */
 	@RequestMapping("/getNearbyAttractions")
-	public List<NearbyAttractionResponse> getNearbyAttractions(String userName) {
+	public List<NearbyAttractionDTO> getNearbyAttractions(String userName) {
 
 		var lastVisitedLocation = this.getUser(userName).getLastVisitedLocation();
 
 		// TODO: ugly, need refactor
 		return tourGuideService.getNearByAttractionsWithDistanceAndReward(lastVisitedLocation).stream().map(triple ->
-				new NearbyAttractionResponse(
+				new NearbyAttractionDTO(
 						triple.getLeft().attractionName,
 						triple.getLeft().latitude, triple.getLeft().longitude,
 						lastVisitedLocation.location.latitude, lastVisitedLocation.location.longitude,
