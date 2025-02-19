@@ -29,3 +29,32 @@ jobs:
 
       - name: Build and test
         run: mvn clean verify -Dgroups="!performance"
+
+      - name: Package the JAR
+        run: mvn package
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: tourguide
+          path: target/*.jar
+
+      - name: Create a release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v0.1
+          release_name: Release v0.1
+          draft: false
+          prerelease: false
+
+      - name: Upload JAR to release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: target/*.jar
+          asset_name: tourguide-0.1.jar
+          asset_content_type: application/java-archive
