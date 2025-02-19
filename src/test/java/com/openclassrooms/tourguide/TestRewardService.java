@@ -1,73 +1,81 @@
 package com.openclassrooms.tourguide;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import gpsUtil.location.Location;
 import org.junit.jupiter.api.Test;
 
-import gpsUtil.GpsUtil;
-import gpsUtil.location.Attraction;
 import gpsUtil.location.VisitedLocation;
-import rewardCentral.RewardCentral;
-import com.openclassrooms.tourguide.helper.InternalTestHelper;
+
+import com.openclassrooms.tourguide.model.User;
+import com.openclassrooms.tourguide.service.AttractionService;
+import com.openclassrooms.tourguide.service.LocationService;
 import com.openclassrooms.tourguide.service.RewardService;
 import com.openclassrooms.tourguide.service.UserService;
-import com.openclassrooms.tourguide.model.User;
-import com.openclassrooms.tourguide.model.UserReward;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 public class TestRewardService {
 
+	@Autowired
+	private LocationService locationService;
+
+	@Autowired
+	private UserService userService;
+
+	@Autowired
+	private RewardService rewardService;
+
+	@Autowired
+	private AttractionService attractionService;
+
 	@Test
 	public void userGetRewards() {
-		Executor executor = Executors.newFixedThreadPool(64);
-		GpsUtil gpsUtil = new GpsUtil();
-		RewardService rewardService = new RewardService(gpsUtil, new RewardCentral(), executor);
+		userService.setInternalUserNumber(0);
+		rewardService.resetProximityBuffer();
 
-		InternalTestHelper.setInternalUserNumber(0);
-		UserService userService = new UserService(gpsUtil, rewardService, executor);
+		var user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
+		var attraction = attractionService.getAttractions().get(0);
 
-		User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
-		Attraction attraction = gpsUtil.getAttractions().get(0);
-		user.addToVisitedLocations(new VisitedLocation(user.getUserId(), attraction, new Date()));
-		userService.trackUserLocationAsync(user).join();
-		List<UserReward> userRewards = user.getUserRewards();
+		user.addToVisitedLocations(new VisitedLocation(user.getId(), attraction, new Date()));
+
+		locationService.trackUserLocationAsync(user).join();
+		var userRewards = user.getUserRewards().values();
+
 		userService.tracker.stopTracking();
-		assertTrue(userRewards.size() == 1);
+
+		int numberOfRewards = userRewards.size();
+		assertEquals(1, numberOfRewards);
 	}
 
 	@Test
 	public void isWithinAttractionProximity() {
-		Executor executor = Executors.newFixedThreadPool(64);
-		GpsUtil gpsUtil = new GpsUtil();
-		RewardService rewardService = new RewardService(gpsUtil, new RewardCentral(), executor);
-		Attraction attraction = gpsUtil.getAttractions().get(0);
-		assertTrue(rewardService.isWithinAttractionProximity(attraction, attraction));
+		var attraction = attractionService.getAttractions().get(0);
+		var rightThere = new Location(attraction.latitude, attraction.longitude);
+		assertTrue(rewardService.isWithinAttractionProximity(attraction, rightThere));
 	}
 
 	@Test
 	public void nearAllAttractions() {
-		Executor executor = Executors.newFixedThreadPool(64);
-		GpsUtil gpsUtil = new GpsUtil();
-		RewardService rewardService = new RewardService(gpsUtil, new RewardCentral(), executor);
+		userService.setInternalUserNumber(1);
 		rewardService.setProximityBuffer(Integer.MAX_VALUE);
 
-		InternalTestHelper.setInternalUserNumber(1);
-		UserService userService = new UserService(gpsUtil, rewardService, executor);
+		var user = userService.getAllUsers().get(0);
+		user.addToVisitedLocations(new VisitedLocation(user.getId(), attractionService.getAttractions().get(0), new Date()));
 
-		rewardService.calculateRewardsAsync(userService.getAllUsers().get(0)).join();
-		List<UserReward> userRewards = userService.getUserRewards(userService.getAllUsers().get(0));
+		rewardService.calculateRewardsAsync(user).join();
+
 		userService.tracker.stopTracking();
 
-		assertEquals(gpsUtil.getAttractions().size(), userRewards.size());
+		int numberOfAttractions = attractionService.getAttractions().size();
+		int numberOfRewards = user.getUserRewards().size();
+		assertEquals(numberOfAttractions, numberOfRewards);
 	}
 
 }
