@@ -5,22 +5,30 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
+
 import org.apache.commons.lang3.time.StopWatch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.openclassrooms.tourguide.service.UserService;
 import com.openclassrooms.tourguide.model.User;
+import com.openclassrooms.tourguide.service.LocationService;
+import com.openclassrooms.tourguide.service.UserService;
 
+@Component
+@Slf4j
 public class Tracker extends Thread {
-	private Logger logger = LoggerFactory.getLogger(Tracker.class);
+
 	private static final long trackingPollingInterval = TimeUnit.MINUTES.toSeconds(5);
 	private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 	private final UserService userService;
+	private final LocationService locationService;
 	private boolean stop = false;
 
-	public Tracker(UserService userService) {
+	public Tracker(@Lazy UserService userService, LocationService locationService) {
 		this.userService = userService;
+		this.locationService = locationService;
 
 		executorService.submit(this);
 	}
@@ -35,22 +43,22 @@ public class Tracker extends Thread {
 
 	@Override
 	public void run() {
-		StopWatch stopWatch = new StopWatch();
+		var stopWatch = new StopWatch();
 		while (true) {
 			if (Thread.currentThread().isInterrupted() || stop) {
-				logger.debug("Tracker stopping");
+				log.debug("Tracker stopping");
 				break;
 			}
 
 			List<User> users = userService.getAllUsers();
-			logger.debug("Begin Tracker. Tracking " + users.size() + " users.");
+			log.debug("Begin Tracker. Tracking {} users.", users.size());
 			stopWatch.start();
-			users.forEach(u -> userService.trackUserLocationAsync(u).join());
+			users.forEach(u -> locationService.trackUserLocationAsync(u).join());
 			stopWatch.stop();
-			logger.debug("Tracker Time Elapsed: " + TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()) + " seconds.");
+			log.debug("Tracker Time Elapsed: {} seconds.", stopWatch.getDuration().toSeconds());
 			stopWatch.reset();
 			try {
-				logger.debug("Tracker sleeping");
+				log.debug("Tracker sleeping");
 				TimeUnit.SECONDS.sleep(trackingPollingInterval);
 			} catch (InterruptedException e) {
 				break;

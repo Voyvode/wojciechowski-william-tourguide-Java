@@ -1,6 +1,5 @@
 package com.openclassrooms.tourguide.dto;
 
-public record NearbyAttractionDTO(String attractionName,
-								  double attractionLatitude, double attractionLongitude,
-								  double userLatitude, double userLongitude,
-								  double distance, int rewardPoints) { }
+import gpsUtil.location.Attraction;
+
+public record NearbyAttractionDTO(Attraction attraction, double distance, int reward) {}
