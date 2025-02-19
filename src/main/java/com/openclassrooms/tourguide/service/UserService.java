@@ -37,19 +37,19 @@ import tripPricer.Provider;
 import tripPricer.TripPricer;
 
 @Service
-public class TourGuideService {
-	private Logger logger = LoggerFactory.getLogger(TourGuideService.class);
+public class UserService {
+	private Logger logger = LoggerFactory.getLogger(UserService.class);
 	private final Executor threadPool;
 	private final GpsUtil gpsUtil;
-	private final RewardsService rewardsService;
+	private final RewardService rewardService;
 	private final TripPricer tripPricer = new TripPricer();
 	public final Tracker tracker;
 	boolean testMode = true;
 
-	public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService, @Qualifier("fixedThreadPool") Executor threadPool) {
+	public UserService(GpsUtil gpsUtil, RewardService rewardService, @Qualifier("fixedThreadPool") Executor threadPool) {
 		this.threadPool = threadPool;
 		this.gpsUtil = gpsUtil;
-		this.rewardsService = rewardsService;
+		this.rewardService = rewardService;
 		
 		Locale.setDefault(Locale.US);
 
@@ -100,7 +100,7 @@ public class TourGuideService {
 		return CompletableFuture.supplyAsync(() -> gpsUtil.getUserLocation(user.getUserId()), threadPool)
 				.thenCompose(visitedLocation -> {
 					user.addToVisitedLocations(visitedLocation);
-					return rewardsService.calculateRewardsAsync(user).thenApply(unused -> visitedLocation);
+					return rewardService.calculateRewardsAsync(user).thenApply(unused -> visitedLocation);
 				});
 	}
 
@@ -111,8 +111,8 @@ public class TourGuideService {
 	 * @return a list of the 5 nearest attractions
 	 */
 	public List<Attraction> getNearByAttractions(VisitedLocation visitedLocation) {
-		return rewardsService.getAttractions().stream()
-				.map(attraction -> Pair.of(attraction, rewardsService.getDistance(attraction, visitedLocation.location)))
+		return rewardService.getAttractions().stream()
+				.map(attraction -> Pair.of(attraction, rewardService.getDistance(attraction, visitedLocation.location)))
 				.sorted(Comparator.comparingDouble(Pair::getValue))
 				.limit(5)
 				.map(Pair::getKey)
@@ -128,10 +128,10 @@ public class TourGuideService {
 	 * @return a list of the 5 nearest attractions
 	 */
 	public List<Triple<Attraction, Double, Integer>> getNearByAttractionsWithDistanceAndReward(VisitedLocation visitedLocation) {
-		return rewardsService.getAttractions().stream()
+		return rewardService.getAttractions().stream()
 				.map(attraction -> Triple.of(attraction,
-								rewardsService.getDistance(attraction, visitedLocation.location),
-								rewardsService.getRewardPoints(attraction, visitedLocation.userId)))
+								rewardService.getDistance(attraction, visitedLocation.location),
+								rewardService.getRewardPoints(attraction, visitedLocation.userId)))
 				.sorted(Comparator.comparingDouble(Triple::getMiddle))
 				.limit(5)
 				.toList();

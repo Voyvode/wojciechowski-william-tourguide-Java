@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.openclassrooms.tourguide.dto.NearbyAttractionDTO;
 import gpsUtil.location.VisitedLocation;
 
-import com.openclassrooms.tourguide.service.TourGuideService;
+import com.openclassrooms.tourguide.service.UserService;
 import com.openclassrooms.tourguide.model.User;
 import com.openclassrooms.tourguide.model.UserReward;
 
@@ -20,7 +20,7 @@ import tripPricer.Provider;
 public class TourGuideController {
 
 	@Autowired
-	TourGuideService tourGuideService;
+	UserService userService;
 	
     @RequestMapping("/")
     public String index() {
@@ -29,7 +29,7 @@ public class TourGuideController {
     
     @RequestMapping("/getLocation") 
     public VisitedLocation getLocation(@RequestParam String userName) {
-    	return tourGuideService.getUserLocation(getUser(userName));
+    	return userService.getUserLocation(getUser(userName));
     }
 
 	/**
@@ -45,7 +45,7 @@ public class TourGuideController {
 		var lastVisitedLocation = this.getUser(userName).getLastVisitedLocation();
 
 		// TODO: ugly, need refactor
-		return tourGuideService.getNearByAttractionsWithDistanceAndReward(lastVisitedLocation).stream().map(triple ->
+		return userService.getNearByAttractionsWithDistanceAndReward(lastVisitedLocation).stream().map(triple ->
 				new NearbyAttractionDTO(
 						triple.getLeft().attractionName,
 						triple.getLeft().latitude, triple.getLeft().longitude,
@@ -57,16 +57,16 @@ public class TourGuideController {
     
     @RequestMapping("/getRewards") 
     public List<UserReward> getRewards(@RequestParam String userName) {
-    	return tourGuideService.getUserRewards(getUser(userName));
+    	return userService.getUserRewards(getUser(userName));
     }
        
     @RequestMapping("/getTripDeals")
     public List<Provider> getTripDeals(@RequestParam String userName) {
-    	return tourGuideService.getTripDeals(getUser(userName));
+    	return userService.getTripDeals(getUser(userName));
     }
     
     private User getUser(String userName) {
-    	return tourGuideService.getUser(userName);
+    	return userService.getUser(userName);
     }
 
 }

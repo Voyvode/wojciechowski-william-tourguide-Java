@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 
 import gpsUtil.GpsUtil;
 import rewardCentral.RewardCentral;
-import com.openclassrooms.tourguide.service.RewardsService;
+import com.openclassrooms.tourguide.service.RewardService;
 
 @Configuration
 @EnableAsync
@@ -21,8 +21,8 @@ public class AppConfig {
 	}
 	
 	@Bean
-	public RewardsService getRewardsService() {
-		return new RewardsService(getGpsUtil(), getRewardCentral(), getTaskExecutor());
+	public RewardService getRewardsService() {
+		return new RewardService(getGpsUtil(), getRewardCentral(), getTaskExecutor());
 	}
 	
 	@Bean

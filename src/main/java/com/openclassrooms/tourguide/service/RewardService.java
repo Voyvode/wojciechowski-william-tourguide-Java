@@ -19,7 +19,7 @@ import com.openclassrooms.tourguide.model.User;
 import com.openclassrooms.tourguide.model.UserReward;
 
 @Service
-public class RewardsService {
+public class RewardService {
     private static final double STATUTE_MILES_PER_NAUTICAL_MILE = 1.15077945;
 
 	// proximity in miles
@@ -30,7 +30,7 @@ public class RewardsService {
 	private final List<Attraction> attractions;
 	private final Executor threadPool;
 	
-	public RewardsService(GpsUtil gpsUtil, RewardCentral rewardCentral, @Qualifier("fixedThreadPool") Executor threadPool) {
+	public RewardService(GpsUtil gpsUtil, RewardCentral rewardCentral, @Qualifier("fixedThreadPool") Executor threadPool) {
 		this.rewardsCentral = rewardCentral;
 		this.attractions = List.copyOf(gpsUtil.getAttractions());
 		this.threadPool = threadPool;
