@@ -29,3 +29,23 @@ jobs:
 
       - name: Build and test
         run: mvn clean verify -Dgroups="!performance"
+
+      - name: Package the JAR
+        run: mvn package
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tourguide
+          path: target/*.jar
+
+      - name: Create Release and Upload JAR
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v0.1
+          name: Release v0.1
+          files: target/*.jar
+          draft: false
+          prerelease: false
